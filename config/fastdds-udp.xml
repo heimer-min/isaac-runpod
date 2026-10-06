@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Fast DDS: 공유메모리(SHM) 전송을 끄고 UDPv4만 사용.
+  /dev/shm이 작은 컨테이너에서 Isaac Sim ↔ ros2 CLI 간 토픽이 "보이는데 데이터가 안 오는"
+  증상의 우회책. Isaac Sim 쪽과 ROS 쪽 양쪽에 같은 파일을 FASTRTPS_DEFAULT_PROFILES_FILE로 지정해야 한다.
+  (Isaac Sim 공식 문서의 multi-machine/Docker용 UDP 프로파일과 같은 구조)
+-->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+    <transport_descriptors>
+        <transport_descriptor>
+            <transport_id>UdpTransport</transport_id>
+            <type>UDPv4</type>
+        </transport_descriptor>
+    </transport_descriptors>
+    <participant profile_name="udp_transport_profile" is_default_profile="true">
+        <rtps>
+            <userTransports>
+                <transport_id>UdpTransport</transport_id>
+            </userTransports>
+            <useBuiltinTransports>false</useBuiltinTransports>
+        </rtps>
+    </participant>
+</profiles>
