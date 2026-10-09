@@ -39,7 +39,7 @@ if ldconfig -p | grep -q libGLX_nvidia.so.0; then
 else
     fail "libGLX_nvidia 없음 — 이 호스트는 compute 전용 라이브러리만 주입. Vulkan 불가, 재배포 권장"
 fi
-if ls /usr/share/vulkan/icd.d/nvidia_icd.json /etc/vulkan/icd.d/nvidia_icd.json >/dev/null 2>&1; then
+if [ -f /usr/share/vulkan/icd.d/nvidia_icd.json ] || [ -f /etc/vulkan/icd.d/nvidia_icd.json ]; then
     ok "NVIDIA Vulkan ICD json 존재"
 else
     warn "nvidia_icd.json을 표준 경로에서 못 찾음 (아래 vulkaninfo 결과로 최종 판단)"

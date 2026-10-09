@@ -40,6 +40,26 @@ log() { echo "[start $(date +%H:%M:%S)] $*"; }
 port_open() { (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
 
 # ---------------------------------------------------------------------------
+# 안전장치 —  (중간 단계가 실패해도 반드시 종료)세션 시간 초과 시 pod 자동 terminate
+#    RunPod가 pod마다 주입하는 RUNPOD_API_KEY(해당 pod 한정 권한)를 사용.
+# ---------------------------------------------------------------------------
+MAX_H="${MAX_SESSION_HOURS%.*}"   # 정수 시간만 지원 (2.5 → 2)
+if [ "$MAX_H" -gt 0 ] 2>/dev/null; then
+    (
+        total=$(( MAX_H * 3600 ))
+        sleep $(( total - 600 ))
+        DISPLAY=$X_DISPLAY xmessage -center "10분 뒤 pod가 자동 terminate 됩니다. 작업을 git push 하세요." &
+        log "자동 종료 10분 전"
+        sleep 600
+        log "MAX_SESSION_HOURS=${MAX_SESSION_HOURS} 도달 — pod terminate 요청"
+        curl -fsS -X DELETE "https://rest.runpod.io/v1/pods/${RUNPOD_POD_ID}" \
+            -H "Authorization: Bearer ${RUNPOD_API_KEY}" \
+            || log "자동 terminate 실패 — 콘솔에서 직접 terminate 하세요!"
+    ) &
+    log "자동 terminate 타이머: ${MAX_SESSION_HOURS}시간"
+fi
+
+# ---------------------------------------------------------------------------
 # 0. EULA — 사용자가 직접 동의해야 한다 (이미지에 Y를 박아두지 않음)
 # ---------------------------------------------------------------------------
 if [ "${ACCEPT_EULA:-}" != "Y" ]; then
@@ -86,7 +106,9 @@ chmod 600 /etc/runpod.env
 # 3. Xvfb — 가상 디스플레이 :1
 # ---------------------------------------------------------------------------
 rm -f "/tmp/.X${X_DISPLAY#:}-lock" "/tmp/.X11-unix/X${X_DISPLAY#:}"
-setsid Xvfb "$X_DISPLAY" -screen 0 "${RESOLUTION}x24" +extension GLX +render -noreset \
+# NVIDIA EGL을 고르면 Xvfb의 GLX 초기화가 segfault → Xvfb에만 Mesa 지정 (2026-10-08 실측)
+setsid env __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json \
+    Xvfb "$X_DISPLAY" -screen 0 "${RESOLUTION}x24" +extension GLX +render -noreset \
     </dev/null >"$LOG_DIR/xvfb.log" 2>&1 &
 for _ in $(seq 1 20); do xdpyinfo -display "$X_DISPLAY" >/dev/null 2>&1 && break; sleep 1; done
 if ! xdpyinfo -display "$X_DISPLAY" >/dev/null 2>&1; then
@@ -157,25 +179,6 @@ else
     log "Isaac 자동 실행 꺼짐 — 데스크톱 xterm 또는 SSH에서 'isaac-gui start'"
 fi
 
-# ---------------------------------------------------------------------------
-# 8. 안전장치 — 세션 시간 초과 시 pod 자동 terminate
-#    RunPod가 pod마다 주입하는 RUNPOD_API_KEY(해당 pod 한정 권한)를 사용.
-# ---------------------------------------------------------------------------
-MAX_H="${MAX_SESSION_HOURS%.*}"   # 정수 시간만 지원 (2.5 → 2)
-if [ "$MAX_H" -gt 0 ] 2>/dev/null; then
-    (
-        total=$(( MAX_H * 3600 ))
-        sleep $(( total - 600 ))
-        DISPLAY=$X_DISPLAY xmessage -center "10분 뒤 pod가 자동 terminate 됩니다. 작업을 git push 하세요." &
-        log "자동 종료 10분 전"
-        sleep 600
-        log "MAX_SESSION_HOURS=${MAX_SESSION_HOURS} 도달 — pod terminate 요청"
-        curl -fsS -X DELETE "https://rest.runpod.io/v1/pods/${RUNPOD_POD_ID}" \
-            -H "Authorization: Bearer ${RUNPOD_API_KEY}" \
-            || log "자동 terminate 실패 — 콘솔에서 직접 terminate 하세요!"
-    ) &
-    log "자동 terminate 타이머: ${MAX_SESSION_HOURS}시간"
-fi
 
 log "부팅 완료. 로그: $LOG_DIR/"
 # PID 1 유지. 자식 프로세스 종료 시그널을 받아도 컨테이너가 죽지 않게 대기.
