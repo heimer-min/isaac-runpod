@@ -7,7 +7,7 @@ Isaac Sim의 공식 원격 화면(WebRTC)은 UDP가 필요한데 RunPod은 TCP/H
 
 > **프로젝트 리포트**: 결정 근거, 트러블슈팅, 측정값, 비용, 한계까지 전체 과정 → [docs/00-project-report.md](docs/00-project-report.md)
 
-## 현재 상태 (2026-10-09)
+## 현재 상태 (2026-10-10 갱신)
 
 | | |
 |---|---|
@@ -15,7 +15,9 @@ Isaac Sim의 공식 원격 화면(WebRTC)은 UDP가 필요한데 RunPod은 TCP/H
 | ✅ 부팅 속도 | 컨테이너 시작 → Isaac 창 표시 **25초** |
 | ⚠️ 한계 | 한국에서 유럽 서버에 접속하면 **조작 지연이 커서** GUI 위주 학습에는 부적합. 화질 조정·프록시 우회로도 개선되지 않음 (원인: 거리 + VNC의 CPU 압축 방식) |
 | ⚠️ 비용 | 2026-10-09 기준 RunPod 4090 요금이 $0.89/hr (조사 당시 Community $0.34). Community에는 드라이버 조건(CUDA 13.2+)을 만족하는 호스트를 확보하지 못함 |
-| ➡️ 다음 | GPU 인코딩 스트리밍(WebRTC)과 가까운 지역을 쓸 수 있는 플랫폼(NVIDIA Brev 공식 Isaac Launchable 등)으로 재평가 |
+| ✅ Brev 재평가 | 서울 AWS L4($0.97/hr + 디스크)에서 noVNC 지연이 크게 개선됨. Isaac Sim 6.0.1 ↔ ROS 2 Jazzy `/clock` 연동 확인 → [docs/06](docs/06-brev-evaluation.md) |
+| ⚠️ Brev 한계 | 16GiB RAM은 GUI에 빠듯함(32GiB 권장). 첫 접속까지 약 45분(이미지 pull 28분) |
+| ➡️ 다음 | `g6.2xlarge`(32GiB)로 로봇·센서·Nav2 실습, Stop/Start 운영 방식 확인 |
 
 ## 아키텍처
 
@@ -60,6 +62,7 @@ Isaac Sim의 공식 원격 화면(WebRTC)은 UDP가 필요한데 RunPod은 TCP/H
 | [scripts/isaac-gui.sh](scripts/isaac-gui.sh) | `isaac-gui start/stop/restart/status/log` |
 | [scripts/diag.sh](scripts/diag.sh) | `isaac-diag`: 드라이버·Vulkan 출력·RAM·shm 점검 |
 | [scripts/shell-env.sh](scripts/shell-env.sh) | 셸 함수 `ros`(시스템 ROS 2 활성화), `ros_udp` |
+| [scripts/ros_clock_test.py](scripts/ros_clock_test.py) | Isaac Sim Script Editor용: `/clock` 발행 OmniGraph 생성 (ROS 2 연동 확인) |
 | [config/fastdds-udp.xml](config/fastdds-udp.xml) | /dev/shm 문제 시 Fast DDS UDP 전용 프로파일 |
 
 ## 문서
@@ -72,6 +75,7 @@ Isaac Sim의 공식 원격 화면(WebRTC)은 UDP가 필요한데 RunPod은 TCP/H
 | [03 첫 실습](docs/03-first-lab.md) | 개념 → 로봇 임포트 → LiDAR → ROS 2 브리지 → rviz2 |
 | [04 비용 루틴](docs/04-cost-routine.md) | 비용 계산과 세션 루틴 |
 | [05 트러블슈팅](docs/05-troubleshooting.md) | 증상별 디버깅 |
+| [06 Brev 재평가](docs/06-brev-evaluation.md) | 서울 리전 지연 개선, ROS 2 연동 확인, 비용·시간 함정 |
 
 > 02·04는 검증 전에 작성한 가이드라서 일부 전제(Community $0.34, `PUBLIC_KEY` 자동 주입)가 실제와 다릅니다. 검증으로 바뀐 내용은 위 "확정 사항"과 리포트가 기준입니다.
 

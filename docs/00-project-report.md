@@ -274,7 +274,7 @@ RunPod HTTP 프록시 (https://<pod-id>-6080.proxy.runpod.net)   ※ 또는 SSH 
 
 | 우선순위 | 할 일 |
 |---|---|
-| 1 | **플랫폼 재평가**: NVIDIA Brev 공식 [Isaac Launchable](https://github.com/isaac-sim/isaac-launchable) (공식 WebRTC 스트리밍, VM이라 정지·재시작 가능). GPU별 가격·지역·정지 중 저장 요금 확인 |
+| 1 | ✅ **플랫폼 재평가 완료(2026-10-10)**: 서울 AWS L4에서 지연 개선과 ROS 2 `/clock` 연동 확인, 16GiB RAM 한계 확인 → [docs/06](06-brev-evaluation.md). 원래 계획: NVIDIA Brev 공식 [Isaac Launchable](https://github.com/isaac-sim/isaac-launchable) (공식 WebRTC 스트리밍, VM이라 정지·재시작 가능). GPU별 가격·지역·정지 중 저장 요금 확인 |
 | 2 | 대안: RunPod 아시아 리전, RunPod "Enable UDP port support"로 공식 WebRTC 스트리밍 시도, Vast.ai |
 | 3 | 첫 실습 완주: 로봇 임포트 → RTX LiDAR → ROS 2 브리지 → rviz2 ([docs/03](03-first-lab.md)) |
 | 4 | 이미지 v3: fluxbox 배경화면 경고 제거, 자동 terminate 검증 |
